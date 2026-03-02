@@ -1,0 +1,7 @@
+C:\Users\Simon\Documents\GitHub\Programming-Recalibration-Month-One\Recalibration Week 1\Recalibration Week 1\bin\Debug\Recalibration Week 1.exe.config
+C:\Users\Simon\Documents\GitHub\Programming-Recalibration-Month-One\Recalibration Week 1\Recalibration Week 1\bin\Debug\Recalibration Week 1.exe
+C:\Users\Simon\Documents\GitHub\Programming-Recalibration-Month-One\Recalibration Week 1\Recalibration Week 1\bin\Debug\Recalibration Week 1.pdb
+C:\Users\Simon\Documents\GitHub\Programming-Recalibration-Month-One\Recalibration Week 1\Recalibration Week 1\obj\Debug\Recalibration Week 1.csproj.AssemblyReference.cache
+C:\Users\Simon\Documents\GitHub\Programming-Recalibration-Month-One\Recalibration Week 1\Recalibration Week 1\obj\Debug\Recalibration Week 1.csproj.CoreCompileInputs.cache
+C:\Users\Simon\Documents\GitHub\Programming-Recalibration-Month-One\Recalibration Week 1\Recalibration Week 1\obj\Debug\Recalibration Week 1.exe
+C:\Users\Simon\Documents\GitHub\Programming-Recalibration-Month-One\Recalibration Week 1\Recalibration Week 1\obj\Debug\Recalibration Week 1.pdb
