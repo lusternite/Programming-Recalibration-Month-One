@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Runtime.Remoting.Messaging;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -12,8 +11,6 @@ internal class Program
     {
         // Initialize execution loop variables
         string userInput = "";
-        string[] txtFiles;
-        List<FileInfo> scannedFiles = new List<FileInfo>();
         // Continue executing until user types "exit"
         while (true)
         {
@@ -33,31 +30,34 @@ internal class Program
                 // User input is not "exit", attempt to scan the specified directory for .txt files, handling potential exceptions that may occur during directory access
                 try
                 {
-                    txtFiles = Directory.GetFiles(userInput, "*.txt");
-                    // Check if no .txt files where found in the specified directory
-                    if (txtFiles.Length == 0)
+                    var files = Directory
+                        .GetFiles(userInput, "*.txt")
+                        .Select(f => new FileInfo(f))
+                        .OrderByDescending(f => f.Length);
+                    // Check if any .txt files were found in the specified directory
+                    if (files.Any())
                     {
-                        Console.WriteLine("No .txt files found in the specified directory.");
+                        // .txt files found, print their names, sizes, and last modified dates to the console sorted by size
+                        Console.WriteLine("Scanned .txt files ordered by size:");
+                        foreach (FileInfo file in files)
+                        {
+                            Console.WriteLine($"{file.Name} - {file.Length} bytes - Modified: {file.LastWriteTime}");
+                        }
+                        // Prompt user to export the report
+                        Console.WriteLine("Would you like to export the report? (y/n)");
+                        userInput = Console.ReadLine();
+                        if (String.Equals(userInput, "y", StringComparison.OrdinalIgnoreCase) == true)
+                        {
+                            // User wants to export the report, call the method to export the file report to a CSV file
+                            ExportFileReport(files);
+                        } else
+                        {
+                            Console.WriteLine("Input other than y was entered, skipping export.");
+                        }
                     } else
                     {
-                        // .txt files were found, create FileInfo objects for each file and add them to the scannedFiles list
-                        foreach (string file in txtFiles)
-                        {
-                            scannedFiles.Add(new FileInfo(file));
-                        }
-                        // Sort the scanned files by size in descending order using LINQ
-                        IEnumerable<FileInfo> sortedFiles =
-                                from f in scannedFiles
-                                orderby f.Length descending
-                                select f;
-                        // Print the sorted list of .txt files to the console, including file name, size in bytes, and last modified date
-                        Console.WriteLine("Scanned .txt files ordered by size:");
-                        foreach (FileInfo file in sortedFiles)
-                        {
-                            Console.WriteLine($"{file.Name} - {file.Length} bytes - Modifed: {file.LastWriteTime}");
-                        }
-                        // Clear the scannedFiles list for the next iteration of the loop
-                        scannedFiles.Clear();
+                        // No .txt files found in the specified directory, inform the user
+                        Console.WriteLine("No .txt files found in the specified directory.");
                     }
                 }
                 // Handle potential exceptions that may occur during directory access, such as unauthorized access or directory not found
@@ -71,16 +71,48 @@ internal class Program
 
     static string GetOutputFilePath()
     {
+        // Get the directory of the executing assembly and return it
+        return Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+    }
+
+    static string GetOutputFilePath(string outputFileName)
+    {
         // Get the directory of the executing assembly and combine it with "output.txt" to get the full file path
         string filePath = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
         Console.WriteLine($"Executing directory: {filePath}");
-        return Path.Combine(filePath, "output.txt");
+        return Path.Combine(filePath, outputFileName);
+    }
+
+    static void ExportFileReport(IOrderedEnumerable<FileInfo> files)
+    {
+        // Get the output file path
+        string filePath = GetOutputFilePath("report.csv");
+        try
+        {
+            // Check if the report.csv file already exists in the output directory, and if not, create it and write the header line
+            if (Directory.GetFiles(GetOutputFilePath(), "report.csv").Length == 0)
+            {
+                File.AppendAllText(filePath, $"FileName,SizeBytes,LastModified");
+            }
+            // Append a header line to the report.csv file indicating the directory that was scanned for .txt files
+            File.AppendAllText(filePath, $"{Environment.NewLine}Report of .txt files in directory: {files.First().Directory.FullName}"); 
+            // Append the file information for each .txt file to the report.csv file
+            foreach (var file in files)
+            {
+                File.AppendAllText(filePath, $"{Environment.NewLine}{file.Name},{file.Length},{file.LastWriteTime}");
+            }
+            Console.WriteLine("Report exported to file report.csv successfully.");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("An error occurred while writing the report to the file: " + ex.Message);
+        }
     }
 
     static void WriteMessageToFile(string message)
     {
         // Get the output file path and create a time-stamped message to write to the file
-        string filePath = GetOutputFilePath();
+        string filePath = GetOutputFilePath("output.txt");
         string timeStampedMessage = $"{DateTime.Now}: {message}{Environment.NewLine}";
         // Attempt to append the time-stamped message to the file, handling potential exceptions that may occur during file operations
         try
@@ -110,10 +142,10 @@ internal class Program
         }
     }
 
-    static void ReadFileAndPrint()
+    static void ReadFileAndPrint(string fileName)
     {
         // Get the output file path and attempt to read its content, handling potential exceptions that may occur during file operations
-        string filePath = GetOutputFilePath();
+        string filePath = GetOutputFilePath(fileName);
         try
         {
             // Read the content of the file and print it to the console
